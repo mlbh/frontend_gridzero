@@ -153,7 +153,7 @@ def carbon_from_mix(mix_mw: dict) -> float:
     total = sum(mix_mw.values())
     if total == 0: return 0.0
     return sum(mix_mw[s] * CARBON_FACTORS[s] for s in SOURCES) / total
-
+#
 def compute_cyclic_features(dt_series: pd.Series) -> pd.DataFrame:
     """Recompute cyclic time features from datetime — needed for Model 2 input."""
     hour = dt_series.dt.hour + dt_series.dt.minute / 60
