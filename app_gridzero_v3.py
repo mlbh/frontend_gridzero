@@ -73,6 +73,8 @@ footer    { visibility: hidden; }
 # ─────────────────────────────────────────────
 # CONSTANTS
 # ─────────────────────────────────────────────
+# NOTE: fossil_oil is in the BQ data but excluded from SOURCES as it is
+# effectively always 0. Add it back here when the model supports it.
 SOURCES = [
     "nuclear", "fossil_gas", "fossil_hard_coal",
     "wind_offshore", "wind_onshore", "solar",
@@ -84,6 +86,7 @@ SOURCE_COLORS = {
     "nuclear":                         "#f0c040",
     "fossil_gas":                      "#f85149",
     "fossil_hard_coal":                "#8b4513",
+    "fossil_oil":                      "#c0392b",  # ready for when needed
     "wind_offshore":                   "#58a6ff",
     "wind_onshore":                    "#79c0ff",
     "solar":                           "#e3b341",
@@ -97,6 +100,7 @@ SOURCE_LABELS = {
     "nuclear":                         "Nuclear",
     "fossil_gas":                      "Fossil Gas",
     "fossil_hard_coal":                "Hard Coal",
+    "fossil_oil":                      "Fossil Oil",  # ready for when needed
     "wind_offshore":                   "Offshore Wind",
     "wind_onshore":                    "Onshore Wind",
     "solar":                           "Solar",
@@ -110,6 +114,7 @@ CARBON_FACTORS = {
     "nuclear":                         12,
     "fossil_gas":                      490,
     "fossil_hard_coal":                820,
+    "fossil_oil":                      650,  # ready for when needed
     "wind_offshore":                   9,
     "wind_onshore":                    11,
     "solar":                           45,
@@ -151,9 +156,9 @@ def carbon_from_mix(mix_mw: dict) -> float:
 
 def compute_cyclic_features(dt_series: pd.Series) -> pd.DataFrame:
     """Recompute cyclic time features from datetime — needed for Model 2 input."""
-    hour    = dt_series.dt.hour + dt_series.dt.minute / 60
-    dow     = dt_series.dt.dayofweek
-    doy     = dt_series.dt.dayofyear
+    hour = dt_series.dt.hour + dt_series.dt.minute / 60
+    dow  = dt_series.dt.dayofweek
+    doy  = dt_series.dt.dayofyear
     return pd.DataFrame({
         "hour_sin": np.sin(2 * np.pi * hour / 24),
         "hour_cos": np.cos(2 * np.pi * hour / 24),
@@ -242,11 +247,7 @@ def make_mix_bar(df: pd.DataFrame) -> go.Figure:
             marker_color=SOURCE_COLORS[src],
             hovertemplate=f"<b>{SOURCE_LABELS[src]}</b><br>%{{y:,.0f}} MW<extra></extra>",
         ))
-    fig.update_layout(
-        **PLOTLY_LAYOUT,
-        barmode="stack",
-        height=340,
-    )
+    fig.update_layout(**PLOTLY_LAYOUT, barmode="stack", height=340)
     fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02,
                                   bgcolor="rgba(0,0,0,0)", font=dict(size=10)))
     return fig
@@ -260,7 +261,6 @@ def make_modified_mix_bar(df: pd.DataFrame, hypo_mix: dict) -> go.Figure:
         if src not in df.columns: continue
         scale = (hypo_mix.get(src, 0) / hypo_total) if hypo_total > 0 else 0
         mod_df[src] = total_base * scale
-
     fig = go.Figure()
     for src in SOURCES:
         if src not in mod_df.columns: continue
@@ -270,11 +270,7 @@ def make_modified_mix_bar(df: pd.DataFrame, hypo_mix: dict) -> go.Figure:
             marker_color=SOURCE_COLORS[src],
             hovertemplate=f"<b>{SOURCE_LABELS[src]}</b><br>%{{y:,.0f}} MW<extra></extra>",
         ))
-    fig.update_layout(
-        **PLOTLY_LAYOUT,
-        barmode="stack",
-        height=340,
-    )
+    fig.update_layout(**PLOTLY_LAYOUT, barmode="stack", height=340)
     fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02,
                                   bgcolor="rgba(0,0,0,0)", font=dict(size=10)))
     return fig
@@ -299,8 +295,7 @@ def make_carbon_line(df: pd.DataFrame, hypothetical=None) -> go.Figure:
         fig.add_trace(go.Scatter(
             x=pd.concat([df["datetime"], df["datetime"][::-1]]),
             y=pd.concat([hypothetical, df["carbon_intensity"][::-1]]),
-            fill="toself",
-            fillcolor="rgba(63,185,80,0.08)",
+            fill="toself", fillcolor="rgba(63,185,80,0.08)",
             line=dict(color="rgba(0,0,0,0)"),
             name="Delta", hoverinfo="skip", showlegend=True,
         ))
@@ -340,16 +335,10 @@ def make_supply_demand(df: pd.DataFrame, hypo_supply_mw: float) -> go.Figure:
 
 
 def make_storage_chart(df: pd.DataFrame, storage_series: pd.Series) -> go.Figure:
-    """
-    Per-period storage chart.
-    Green bars = surplus energy available each 30-min slot.
-    Red bars   = storage needed each 30-min slot.
-    """
     colors = ["#3fb950" if v >= 0 else "#f85149" for v in storage_series]
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=df["datetime"],
-        y=storage_series,
+        x=df["datetime"], y=storage_series,
         marker_color=colors,
         hovertemplate="<b>%{x|%d %b %H:%M}</b><br>%{y:.1f} MWh<extra></extra>",
         name="Storage +/−"
@@ -469,17 +458,17 @@ with st.sidebar:
     # ── Generation Mix Inputs ──
     st.markdown('<div class="section-header" style="margin-top:4px;">Generation Mix (MW)</div>', unsafe_allow_html=True)
 
-    sidebar_nuclear           = st.number_input("⚛  Nuclear (MW)",       min_value=0, max_value=9000,  value=5200, step=100)
-    sidebar_fossil_gas        = st.number_input("🔥 Fossil Gas (MW)",     min_value=0, max_value=15000, value=2000, step=100)
-    sidebar_fossil_hard_coal  = st.number_input("⛏  Hard Coal (MW)",      min_value=0, max_value=3000,  value=300,  step=50)
-    sidebar_wind_offshore     = st.number_input("💨 Offshore Wind (MW)",  min_value=0, max_value=10000, value=2800, step=100)
-    sidebar_wind_onshore      = st.number_input("🌬  Onshore Wind (MW)",  min_value=0, max_value=6000,  value=1400, step=100)
-    sidebar_solar             = st.number_input("☀  Solar (MW)",          min_value=0, max_value=8000,  value=1500, step=100)
-    sidebar_biomass           = st.number_input("🌿 Biomass (MW)",         min_value=0, max_value=4000,  value=1800, step=50)
-    sidebar_hydro_ror         = st.number_input("💧 Hydro RoR (MW)",      min_value=0, max_value=2000,  value=350,  step=50)
-    sidebar_hydro_pumped      = st.number_input("🔋 Hydro Pumped (MW)",   min_value=0, max_value=3000,  value=200,  step=50)
-    sidebar_other             = st.number_input("➕ Other (MW)",           min_value=0, max_value=5000,  value=100,  step=50)
-    sidebar_total             = st.number_input("📊 Total Generation (MW)",min_value=5000, max_value=70000, value=36000, step=500)
+    sidebar_nuclear          = st.number_input("⚛  Nuclear (MW)",        min_value=0, max_value=9000,  value=5200, step=100)
+    sidebar_fossil_gas       = st.number_input("🔥 Fossil Gas (MW)",      min_value=0, max_value=15000, value=2000, step=100)
+    sidebar_fossil_hard_coal = st.number_input("⛏  Hard Coal (MW)",       min_value=0, max_value=3000,  value=300,  step=50)
+    sidebar_wind_offshore    = st.number_input("💨 Offshore Wind (MW)",   min_value=0, max_value=10000, value=2800, step=100)
+    sidebar_wind_onshore     = st.number_input("🌬  Onshore Wind (MW)",   min_value=0, max_value=6000,  value=1400, step=100)
+    sidebar_solar            = st.number_input("☀  Solar (MW)",           min_value=0, max_value=8000,  value=1500, step=100)
+    sidebar_biomass          = st.number_input("🌿 Biomass (MW)",          min_value=0, max_value=4000,  value=1800, step=50)
+    sidebar_hydro_ror        = st.number_input("💧 Hydro RoR (MW)",       min_value=0, max_value=2000,  value=350,  step=50)
+    sidebar_hydro_pumped     = st.number_input("🔋 Hydro Pumped (MW)",    min_value=0, max_value=3000,  value=200,  step=50)
+    sidebar_other            = st.number_input("➕ Other (MW)",            min_value=0, max_value=5000,  value=100,  step=50)
+    sidebar_total            = st.number_input("📊 Total Generation (MW)", min_value=5000, max_value=70000, value=36000, step=500)
 
     # ── Status ──
     st.markdown('<div class="section-header" style="margin-top:20px;">Status</div>', unsafe_allow_html=True)
@@ -522,7 +511,6 @@ if app_mode == "Historical":
         st.warning(f"No data found for {start_date} → {end_date}. Try a different date range.")
         st.stop()
 else:
-    # FORECAST MODE — dummy data, replace with model endpoint later
     df = make_dummy_forecast(datetime.now())
     data_ok = True
     st.info("⚡ Forecast mode: showing dummy predictions — model integration coming soon.", icon="🔮")
@@ -645,7 +633,7 @@ with st.expander("⚙  Configure Hypothetical Mix", expanded=True):
         Sliders show % of total generation. Total is kept at the predicted average.
     </div>""", unsafe_allow_html=True)
 
-    base_pct = {s: (base_avg[s] / total_base * 100) if total_base > 0 else 0
+    base_pct = {s: (base_avg[s] / total_base * 100) if total_base > 0 else 0.0
                 for s in SOURCES if s in base_avg}
 
     slider_cfg = [
@@ -668,8 +656,9 @@ with st.expander("⚙  Configure Hypothetical Mix", expanded=True):
         with col:
             hypo_pct[key] = st.slider(
                 lbl,
-                min_value=float(mn), max_value=float(mx),
-                value=round(base_pct.get(key, 0), 1),
+                min_value=float(mn),
+                max_value=float(mx),
+                value=float(round(base_pct.get(key, 0.0), 1)),  # float() fixes int/float mismatch
                 step=0.5,
                 format="%.1f%%",
                 help=f"Predicted avg: {base_pct.get(key, 0):.1f}%",
@@ -679,13 +668,12 @@ with st.expander("⚙  Configure Hypothetical Mix", expanded=True):
     if pct_total > 0:
         hypo_mix = {s: (hypo_pct[s] / pct_total) * total_base for s in SOURCES if s in hypo_pct}
     else:
-        hypo_mix = {s: 0 for s in SOURCES}
+        hypo_mix = {s: 0.0 for s in SOURCES}
 
     hypo_total  = sum(hypo_mix.values())
     hypo_carbon = carbon_from_mix(hypo_mix)
 
     # ── Per-period storage calculation ──
-    # Apply slider proportions to each 30-min row, compare against actual supply
     hypo_series = pd.Series(0.0, index=df.index)
     for src in SOURCES:
         if src in df.columns and hypo_total > 0:
