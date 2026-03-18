@@ -750,11 +750,23 @@ with st.expander("📋  Raw Data"):
 # ─────────────────────────────────────────────
 # FOOTER
 # ─────────────────────────────────────────────
+#st.markdown("""
+#<div style='border-top:1px solid #21262d;margin-top:32px;padding-top:16px;
+#           font-size:11px;color:#484f58;font-family:Space Mono,monospace;
+#            display:flex;justify-content:space-between;'>
+#    <span>GRID-ish-Zero · Historical data mode</span>
+#    <span>Models: LSTM (Keras) + XGBoost (JSON) · Weather: Open-Meteo · Data: Elexon / BigQuery</span>
+#</div>
+#""", unsafe_allow_html=True)
+
+st.markdown("---")
 st.markdown("""
-<div style='border-top:1px solid #21262d;margin-top:32px;padding-top:16px;
-            font-size:11px;color:#484f58;font-family:Space Mono,monospace;
-            display:flex;justify-content:space-between;'>
-    <span>GRID-ish-Zero · Historical data mode</span>
-    <span>Models: LSTM (Keras) + XGBoost (JSON) · Weather: Open-Meteo · Data: Elexon / BigQuery</span>
+<div style='text-align:center; font-size:0.9rem; color:#6c757d; line-height:1.6;'>
+<strong>Le Wagon Data Science & AI Bootcamp | March 2026</strong><br>
+<strong>Team GitHub:</strong>
+<a href='https://github.com/mlbh' target='_blank'>Madeleine</a> |
+<a href='https://github.com/josephmac02' target='_blank'>Joseph</a> |
+<a href='https://github.com/LaSemaj' target='_blank'>James</a> |
+<a href='https://github.com/dd4real2k' target='_blank'>Daniel</a>
 </div>
 """, unsafe_allow_html=True)
