@@ -4,6 +4,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import requests
 import plotly.graph_objects as go
 from datetime import datetime, timedelta, date
 from google.cloud import bigquery
@@ -167,6 +168,22 @@ def compute_cyclic_features(dt_series: pd.Series) -> pd.DataFrame:
         "doy_sin":  np.sin(2 * np.pi * doy  / 365),
         "doy_cos":  np.cos(2 * np.pi * doy  / 365),
     })
+
+
+@st.cache_data(ttl=1800)
+def fetch_lstm_forecast(location, start_date, end_date):
+    url = "https://gridzero-400241154738.europe-west2.run.app/predict_lstm"
+    payload = {
+        "location": location,
+        "start_date": str(start_date),
+        "end_date": str(end_date)
+    }
+    response = requests.post(url, json=payload, timeout=30)
+    response.raise_for_status()
+    return response.json()
+
+
+
 
 def make_dummy_forecast(start_dt, n_periods=336):
     """Generate 7 days of realistic-looking half-hourly dummy forecast data."""
@@ -499,6 +516,10 @@ sidebar_mix = {
 # ─────────────────────────────────────────────
 # LOAD DATA
 # ─────────────────────────────────────────────
+# For Forecast mode, we call the LSTM API with the selected location and date range.
+used_dummy_forecast = False
+forecast_json = None
+
 if app_mode == "Historical":
     with st.spinner("Loading data from BigQuery..."):
         try:
@@ -507,14 +528,65 @@ if app_mode == "Historical":
         except Exception as e:
             st.error(f"BigQuery error: {e}")
             st.stop()
+
     if not data_ok:
         st.warning(f"No data found for {start_date} → {end_date}. Try a different date range.")
         st.stop()
-else:
-    df = make_dummy_forecast(datetime.now())
-    data_ok = True
-    st.info("⚡ Forecast mode: showing dummy predictions — model integration coming soon.", icon="🔮")
 
+else:
+    with st.spinner("Fetching forecast from LSTM API..."):
+        try:
+            forecast_json = fetch_lstm_forecast(location, start_date, end_date)
+            if forecast_json is not None:
+                if isinstance(forecast_json, dict):
+                    if "predictions" in forecast_json:
+                        df = pd.DataFrame(forecast_json["predictions"])
+                    elif "forecast" in forecast_json:
+                        df = pd.DataFrame(forecast_json["forecast"])
+                    else:
+                        df = pd.DataFrame([forecast_json])
+                else:
+                    df = pd.DataFrame(forecast_json)
+
+                if "datetime" not in df.columns:
+                    raise ValueError("API response missing 'datetime' column")
+
+                df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
+
+                for col in SOURCES:
+                    if col in df.columns:
+                        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).clip(lower=0)
+
+                available_sources = [col for col in SOURCES if col in df.columns]
+
+                if "total_supply_mw" not in df.columns and available_sources:
+                    df["total_supply_mw"] = df[available_sources].sum(axis=1)
+
+                if "carbon_intensity" not in df.columns and available_sources:
+                    df["carbon_intensity"] = df.apply(
+                        lambda r: carbon_from_mix({s: r.get(s, 0) for s in SOURCES}),
+                        axis=1
+                    )
+
+                data_ok = len(df) > 0
+
+                if not data_ok:
+                    st.warning("API returned no forecast data. Showing dummy forecast instead.")
+                    df = make_dummy_forecast(datetime.now())
+                    used_dummy_forecast = True
+                    data_ok = True
+
+            else:
+                st.warning("LSTM API unavailable. Showing dummy forecast instead.")
+                df = make_dummy_forecast(datetime.now())
+                used_dummy_forecast = True
+                data_ok = True
+
+        except Exception as e:
+            st.warning(f"Forecast API failed: {e}. Showing dummy forecast instead.")
+            df = make_dummy_forecast(datetime.now())
+            used_dummy_forecast = True
+            data_ok = True
 # ─────────────────────────────────────────────
 # COMPUTED SUMMARY VALUES
 # ─────────────────────────────────────────────
@@ -542,7 +614,10 @@ date_range_str = (
     else f"{start_date.strftime('%d %b %Y')} – {end_date.strftime('%d %b %Y')}"
 )
 
-mode_label = "Forecast (Dummy)" if app_mode == "Forecast" else "Historical"
+if app_mode == "Historical":
+    mode_label = "Historical"
+else:
+    mode_label = "Forecast (Dummy)" if used_dummy_forecast else "Forecast (API)"
 
 st.markdown(f"""
 <div style='display:flex;align-items:center;justify-content:space-between;
