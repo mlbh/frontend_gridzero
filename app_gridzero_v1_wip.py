@@ -1,3 +1,4 @@
+# imports
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,13 +7,21 @@ import plotly.express as px
 import sys
 import os
 
-path_to_scripts = os.path.join('..', '..', 'python_scripts')
-sys.path.append(path_to_scripts)
+from google.cloud import bigquery
 
-%load_ext autoreload
+@st.cache_data
+def load_from_bigquery(query: str) -> pd.DataFrame:
+    client = bigquery.Client()
+    return client.query(query).to_dataframe()
 
-from datetime import datetime, timedelta, date
-from data_to_bigquery import load_from_bigquery
+query = """
+    SELECT *
+    FROM `your-project.your_dataset.your_table`
+    WHERE datetime BETWEEN '2024-01-01' AND '2024-12-31'
+    ORDER BY datetime
+"""
+
+df = load_from_bigquery(query)
 
 st.set_page_config(
     page_title="GRID-ish-Zero",
@@ -451,7 +460,7 @@ with st.sidebar:
         value=36000, step=500, label_visibility="visible",
         help="Set total solar generation as a proportion of the total generation"
     )
-    
+
     tot_gen_mw = st.number_input(
         "Total Generation (MW)", min_value=5000, max_value=70000,
         value=36000, step=500, label_visibility="visible",
