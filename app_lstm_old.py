@@ -177,11 +177,11 @@ CARBON_INTENSITY_FACTORS = {
 }
 
 GROUPS = {
+        "Fossil Fuels":  ["Fossil Gas", "Fossil Hard coal", "Fossil Oil"],
     "Renewables":    ["Solar", "Wind Offshore", "Wind Onshore",
                       "Hydro Run-of-river and poundage", "Biomass"],
     "Nuclear":       ["Nuclear"],
     "Hydro Storage": ["Hydro Pumped Storage"],
-    "Fossil Fuels":  ["Fossil Gas", "Fossil Hard coal", "Fossil Oil"],
     "Other":         ["Other"],
 }
 
@@ -256,7 +256,7 @@ with ctrl_c:
         st.info(f"Showing {st.session_state.forecast_days}-day forecast. Adjust the horizon and click Run Forecast to refresh.")
 
 # ── Fetch ──────────────────────────────────────────────────────────────────────
-def fetch_forecast(days: int) -> pd.DataFrame:
+def fetch_lstm_forecast(days: int) -> pd.DataFrame:
     response = requests.get(
         "https://gridzero-400241154738.europe-west2.run.app/predict_lstm",
         params={"days": days},
@@ -264,22 +264,42 @@ def fetch_forecast(days: int) -> pd.DataFrame:
     response.raise_for_status()
     return pd.DataFrame(response.json())
 
+def fetch_xgb_forecast() -> pd.DataFrame:
+    print("running xgb model on api endpoint")
+    response_xgb = requests.get(
+        "https://gridzero-400241154738.europe-west2.run.app/predict_xgb",          # swap in your real URL when ready
+    )
+    response_xgb.raise_for_status()
+    xgb_df = pd.DataFrame(response_xgb.json())
+    print(xgb_df.head())
+    # # rename columns to match LSTM shape
+    # xgb_df = xgb_df.rename(columns={})
+    return xgb_df
+
+
 if predict_clicked:
     with st.spinner("Fetching forecast..."):
         try:
-            df = fetch_forecast(days)
+            df = fetch_lstm_forecast(days)
             df["time"] = pd.to_datetime(df["time"])
             df = df.sort_values("time")
-            emissions = sum(
-                df[src] * factor
-                for src, factor in CARBON_INTENSITY_FACTORS.items()
-                if src in df.columns
-            )
-            df["carbon_intensity"] = emissions / df["total_output_MW"]
-            # Pre-compute grouped columns
-            for group, sources in GROUPS.items():
-                cols = [c for c in sources if c in df.columns]
-                df[group] = df[cols].sum(axis=1)
+
+            #manually calculate carbon
+            # emissions = sum(
+            #     df[src] * factor
+            #     for src, factor in CARBON_INTENSITY_FACTORS.items()
+            #     if src in df.columns
+            # )
+            # df["carbon_intensity"] = emissions / df["total_output_MW"]
+            # # Pre-compute grouped columns
+            # for group, sources in GROUPS.items():
+            #     cols = [c for c in sources if c in df.columns]
+            #     df[group] = df[cols].sum(axis=1)
+
+            carbon_df = fetch_xgb_forecast()
+            df["carbon_intensity"] = carbon_df['carbon intensity']
+
+
             st.session_state.forecast_df   = df
             st.session_state.forecast_days = days
             st.success("Forecast loaded successfully.")
@@ -301,7 +321,7 @@ latest       = df.iloc[-1]
 interval_h   = (df["time"].diff().dropna().mode()[0].seconds / 3600)
 total_mwh    = df["total_output_MW"].sum() * interval_h
 avg_ci       = df["carbon_intensity"].mean()
-latest_ci    = latest["carbon_intensity"]
+# latest_ci    = latest["carbon_intensity"]
 renew_mwh    = df[RENEWABLES].sum().sum() * interval_h
 fossil_mwh   = df[FOSSIL].sum().sum() * interval_h
 total_gen    = df[GENERATION_COLS].sum().sum() * interval_h
@@ -315,7 +335,7 @@ def ci_info(val):
     return               "High",       "red"
 
 avg_ci_label, avg_ci_cls = ci_info(avg_ci)
-lat_ci_label, lat_ci_cls = ci_info(latest_ci)
+# lat_ci_label, lat_ci_cls = ci_info(latest_ci)
 
 # ── KPI row ────────────────────────────────────────────────────────────────────
 st.markdown(f"""
@@ -329,11 +349,6 @@ st.markdown(f"""
     <div class="kpi-label">Avg Carbon Intensity</div>
     <div class="kpi-value">{avg_ci:.0f}</div>
     <div class="kpi-delta {avg_ci_cls}">{avg_ci_label} · gCO₂/kWh</div>
-  </div>
-  <div class="kpi-card" style="--bar:#0ea5e9">
-    <div class="kpi-label">Latest Carbon Intensity</div>
-    <div class="kpi-value">{latest_ci:.0f}</div>
-    <div class="kpi-delta {lat_ci_cls}">{lat_ci_label} · gCO₂/kWh</div>
   </div>
   <div class="kpi-card" style="--bar:#10b981">
     <div class="kpi-label">Renewable Share</div>
@@ -423,9 +438,9 @@ st.divider()
 section("Generation", "Grouped Mix & Carbon Intensity Over Time")
 
 fig_mix = go.Figure()
-for group in GROUPS.keys():
+for group, group_cols in GROUPS.items():
     fig_mix.add_trace(go.Scatter(
-        x=df["time"], y=df[group],
+        x=df["time"], y=df[group_cols].sum(axis=1),
         name=group, yaxis="y1",
         stackgroup="one",
         fillcolor=GROUP_COLOURS[group],
@@ -435,7 +450,7 @@ for group in GROUPS.keys():
 fig_mix.add_trace(go.Scatter(
     x=df["time"], y=df["carbon_intensity"],
     name="Carbon Intensity (gCO₂/kWh)", yaxis="y2",
-    line=dict(color="#fbbf24", width=2, dash="dot"),
+    line=dict(color="#020101", width=2, dash="dot"),
     hovertemplate="<b>Carbon Intensity</b>: %{y:.0f} gCO₂/kWh<extra></extra>",
 ))
 apply_layout(fig_mix,
@@ -506,7 +521,7 @@ with col_d:
         color_continuous_scale=["#10b981", "#f59e0b", "#ef4444"],
     )
     fig_co2.update_coloraxes(showscale=False)
-    apply_layout(fig_co2, xaxis_title="Avg gCO₂/kWh contribution", yaxis_title="")
+    apply_layout(fig_co2, xaxis_title="Total gCO₂ contribution", yaxis_title="")
     st.plotly_chart(fig_co2, use_container_width=True)
 
 

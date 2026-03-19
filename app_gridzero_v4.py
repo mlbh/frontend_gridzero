@@ -124,8 +124,10 @@ RENEWABLES = ["Solar", "Wind Offshore", "Wind Onshore",
 FOSSIL     = ["Fossil Gas", "Fossil Hard coal", "Fossil Oil"]
 
 # ── KPI row ────────────────────────────────────────────────────────────────────
-latest = df.iloc[-1]
-total  = latest[GENERATION_COLS].sum()
+# ── KPI row ────────────────────────────────────────────────────────────────────
+latest = df.iloc[-1]  # still used for carbon intensity, temperature, etc.
+
+total_output_all = df["total_output_MW"].sum()  # sum across all timestamps
 renew  = latest[RENEWABLES].sum()
 fossil = latest[FOSSIL].sum()
 ci     = latest["carbon_intensity"]
@@ -141,10 +143,10 @@ else:
     ci_label, ci_delta = "🔴 High", "High carbon"
 
 k1, k2, k3, k4, k5 = st.columns(5)
-k1.metric("Total Output (MW)",      f"{latest['total_output_MW']:,.0f}")
-k2.metric("Carbon Intensity",       f"{ci:.0f} gCO₂/kWh", ci_label)
-k3.metric("Renewables (MW)",        f"{renew:,.0f}",  f"{renew/total*100:.1f}%")
-k4.metric("Fossil Fuels (MW)",      f"{fossil:,.0f}", f"{fossil/total*100:.1f}%")
+k1.metric("Total Output (MW)", f"{total_output_all:,.0f}")
+k2.metric("Carbon Intensity (gCO₂/kWh)",       f"{ci:.0f}", ci_label)
+k3.metric("Renewables (MW)",        f"{renew:,.0f}",  f"{renew/total_output_all*100:.1f}%")
+k4.metric("Fossil Fuels (MW)",      f"{fossil:,.0f}", f"{fossil/total_output_all*100:.1f}%")
 k5.metric("Temperature (°C)",       f"{latest['temperature_2m']:.1f}")
 
 

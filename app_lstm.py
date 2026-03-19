@@ -18,15 +18,15 @@ st.markdown("""
 
     html, body, [class*="css"] {
         font-family: 'DM Sans', sans-serif;
-        background-color: #0f1117;
-        color: #e8eaf0;
+        background-color: #f5f6fa;
+        color: #1a1d2e;
     }
-    .stApp { background: #0f1117; }
+    .stApp { background: #f5f6fa; }
 
     /* ── Header ── */
     .dash-header {
         padding: 2rem 0 1.5rem 0;
-        border-bottom: 1px solid #1e2740;
+        border-bottom: 1px solid #dde1f0;
         margin-bottom: 2rem;
     }
     .dash-eyebrow {
@@ -34,18 +34,18 @@ st.markdown("""
         font-size: 0.7rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: #4b5680;
+        color: #8890b0;
         margin-bottom: 0.35rem;
     }
     .dash-title {
         font-family: 'DM Sans', sans-serif;
         font-size: 1.9rem;
         font-weight: 600;
-        color: #e8eaf0;
+        color: #1a1d2e;
         letter-spacing: -0.02em;
         line-height: 1.1;
     }
-    .dash-title span { color: #60a5fa; }
+    .dash-title span { color: #2563eb; }
 
     /* ── KPI cards ── */
     .kpi-grid {
@@ -55,8 +55,8 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     .kpi-card {
-        background: #161b2e;
-        border: 1px solid #1e2740;
+        background: #ffffff;
+        border: 1px solid #dde1f0;
         border-radius: 10px;
         padding: 1.25rem 1.4rem 1.1rem;
         position: relative;
@@ -68,20 +68,20 @@ st.markdown("""
         height: 2px;
         border-radius: 2px;
         background: var(--bar, #3b82f6);
-        opacity: 0.5;
+        opacity: 0.6;
     }
     .kpi-label {
         font-family: 'DM Mono', monospace;
         font-size: 0.62rem;
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: #4b5680;
+        color: #8890b0;
         margin-bottom: 0.6rem;
     }
     .kpi-value {
         font-size: 1.65rem;
         font-weight: 600;
-        color: #e8eaf0;
+        color: #1a1d2e;
         letter-spacing: -0.02em;
         line-height: 1;
     }
@@ -89,12 +89,12 @@ st.markdown("""
         font-family: 'DM Mono', monospace;
         font-size: 0.68rem;
         margin-top: 0.45rem;
-        color: #4b5680;
+        color: #8890b0;
     }
-    .kpi-delta.green  { color: #34d399; }
-    .kpi-delta.amber  { color: #fbbf24; }
-    .kpi-delta.orange { color: #fb923c; }
-    .kpi-delta.red    { color: #f87171; }
+    .kpi-delta.green  { color: #059669; }
+    .kpi-delta.amber  { color: #d97706; }
+    .kpi-delta.orange { color: #ea580c; }
+    .kpi-delta.red    { color: #dc2626; }
 
     /* ── Section headers ── */
     .section-wrap { margin: 0.25rem 0 0.75rem; }
@@ -103,24 +103,24 @@ st.markdown("""
         font-size: 0.62rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #60a5fa;
+        color: #2563eb;
         margin-bottom: 0.2rem;
     }
     .section-title {
         font-size: 1rem;
         font-weight: 600;
-        color: #e8eaf0;
+        color: #1a1d2e;
         letter-spacing: -0.01em;
     }
 
     /* ── Streamlit widget overrides ── */
     .stSelectbox > div > div {
-        background: #161b2e !important;
-        border: 1px solid #1e2740 !important;
+        background: #ffffff !important;
+        border: 1px solid #dde1f0 !important;
         border-radius: 8px !important;
         font-family: 'DM Sans', sans-serif !important;
         font-size: 0.9rem !important;
-        color: #e8eaf0 !important;
+        color: #1a1d2e !important;
     }
     .stButton > button {
         background: #2563eb !important;
@@ -136,7 +136,7 @@ st.markdown("""
     .stButton > button:hover { background: #1d4ed8 !important; }
 
     /* ── Misc ── */
-    hr { border-color: #1e2740 !important; }
+    hr { border-color: #dde1f0 !important; }
     .stAlert {
         border-radius: 8px !important;
         font-family: 'DM Sans', sans-serif !important;
@@ -146,7 +146,7 @@ st.markdown("""
         font-family: 'DM Mono', monospace !important;
         font-size: 0.72rem !important;
         letter-spacing: 0.06em !important;
-        color: #4b5680 !important;
+        color: #8890b0 !important;
     }
     #MainMenu, footer { visibility: hidden; }
 </style>
@@ -186,28 +186,28 @@ GROUPS = {
 }
 
 GROUP_COLOURS = {
-    "Renewables":    "#34d399",
-    "Nuclear":       "#60a5fa",
-    "Hydro Storage": "#0ea5e9",
-    "Fossil Fuels":  "#f87171",
-    "Other":         "#94a3b8",
+    "Renewables":    "#059669",
+    "Nuclear":       "#2563eb",
+    "Hydro Storage": "#0284c7",
+    "Fossil Fuels":  "#dc2626",
+    "Other":         "#64748b",
 }
 
 PALETTE = [
-    "#2563eb", "#0ea5e9", "#10b981", "#f59e0b",
-    "#ef4444", "#8b5cf6", "#f97316", "#6ee7b7",
-    "#93c5fd", "#fca5a5", "#6366f1",
+    "#2563eb", "#0284c7", "#059669", "#d97706",
+    "#dc2626", "#7c3aed", "#ea580c", "#34d399",
+    "#93c5fd", "#fca5a5", "#818cf8",
 ]
 
 PLOT_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="#161b2e",
-    font=dict(family="DM Sans, sans-serif", color="#4b5680", size=11),
-    xaxis=dict(gridcolor="#1e2740", zeroline=False, showline=False, tickfont=dict(size=10)),
-    yaxis=dict(gridcolor="#1e2740", zeroline=False, showline=False, tickfont=dict(size=10)),
+    plot_bgcolor="#ffffff",
+    font=dict(family="DM Sans, sans-serif", color="#8890b0", size=11),
+    xaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10)),
+    yaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10)),
     legend=dict(
-        bgcolor="rgba(22,27,46,0.9)",
-        bordercolor="#1e2740",
+        bgcolor="rgba(255,255,255,0.9)",
+        bordercolor="#dde1f0",
         borderwidth=1,
         font=dict(size=10, family="DM Sans, sans-serif"),
     ),
@@ -268,13 +268,11 @@ def fetch_lstm_forecast(days: int) -> pd.DataFrame:
 def fetch_xgb_forecast() -> pd.DataFrame:
     print("running xgb model on api endpoint")
     response_xgb = requests.get(
-        "https://gridzero-400241154738.europe-west2.run.app/predict_xgb",          # swap in your real URL when ready
+        "https://gridzero-400241154738.europe-west2.run.app/predict_xgb",
     )
     response_xgb.raise_for_status()
     xgb_df = pd.DataFrame(response_xgb.json())
     print(xgb_df.head())
-    # # rename columns to match LSTM shape
-    # xgb_df = xgb_df.rename(columns={})
     return xgb_df
 
 if predict_clicked:
@@ -301,7 +299,6 @@ if predict_clicked:
             carbon_df = fetch_xgb_forecast()
             df["carbon_intensity"] = carbon_df['carbon intensity']
 
-
             st.session_state.forecast_df   = df
             st.session_state.forecast_days = days
             st.success("Forecast loaded successfully.")
@@ -311,8 +308,8 @@ if predict_clicked:
 # ── Gate ───────────────────────────────────────────────────────────────────────
 if st.session_state.forecast_df is None:
     st.markdown("""
-    <div style="text-align:center;padding:5rem 0;color:#4b5680;font-family:'DM Mono',monospace;font-size:0.8rem">
-        Select a forecast horizon above and click <strong style="color:#60a5fa">Run Forecast</strong> to load data.
+    <div style="text-align:center;padding:5rem 0;color:#8890b0;font-family:'DM Mono',monospace;font-size:0.8rem">
+        Select a forecast horizon above and click <strong style="color:#2563eb">Run Forecast</strong> to load data.
     </div>""", unsafe_allow_html=True)
     st.stop()
 
@@ -323,7 +320,6 @@ latest       = df.iloc[-1]
 interval_h   = (df["time"].diff().dropna().mode()[0].seconds / 3600)
 total_mwh    = df["total_output_MW"].sum() * interval_h
 avg_ci       = df["carbon_intensity"].mean()
-latest_ci    = latest["carbon_intensity"]
 renew_mwh    = df[RENEWABLES].sum().sum() * interval_h
 fossil_mwh   = df[FOSSIL].sum().sum() * interval_h
 total_gen    = df[GENERATION_COLS].sum().sum() * interval_h
@@ -337,7 +333,6 @@ def ci_info(val):
     return               "High",       "red"
 
 avg_ci_label, avg_ci_cls = ci_info(avg_ci)
-lat_ci_label, lat_ci_cls = ci_info(latest_ci)
 
 # ── KPI row ────────────────────────────────────────────────────────────────────
 st.markdown(f"""
@@ -347,22 +342,17 @@ st.markdown(f"""
     <div class="kpi-value">{total_mwh:,.0f}</div>
     <div class="kpi-delta">MWh · {st.session_state.forecast_days} day(s)</div>
   </div>
-  <div class="kpi-card" style="--bar:#10b981">
+  <div class="kpi-card" style="--bar:#059669">
     <div class="kpi-label">Avg Carbon Intensity</div>
     <div class="kpi-value">{avg_ci:.0f}</div>
     <div class="kpi-delta {avg_ci_cls}">{avg_ci_label} · gCO₂/kWh</div>
   </div>
-  <div class="kpi-card" style="--bar:#0ea5e9">
-    <div class="kpi-label">Latest Carbon Intensity</div>
-    <div class="kpi-value">{latest_ci:.0f}</div>
-    <div class="kpi-delta {lat_ci_cls}">{lat_ci_label} · gCO₂/kWh</div>
-  </div>
-  <div class="kpi-card" style="--bar:#10b981">
+  <div class="kpi-card" style="--bar:#059669">
     <div class="kpi-label">Renewable Share</div>
     <div class="kpi-value">{renew_pct:.1f}%</div>
     <div class="kpi-delta green">{renew_mwh:,.0f} MWh</div>
   </div>
-  <div class="kpi-card" style="--bar:#ef4444">
+  <div class="kpi-card" style="--bar:#dc2626">
     <div class="kpi-label">Fossil Share</div>
     <div class="kpi-value">{fossil_pct:.1f}%</div>
     <div class="kpi-delta red">{fossil_mwh:,.0f} MWh</div>
@@ -392,8 +382,8 @@ with col_a:
     fig_donut.update_traces(
         textposition="outside",
         textinfo="percent+label",
-        textfont=dict(family="DM Sans, sans-serif", size=10, color="#4b5680"),
-        marker=dict(line=dict(color="#0f1117", width=2)),
+        textfont=dict(family="DM Sans, sans-serif", size=10, color="#8890b0"),
+        marker=dict(line=dict(color="#f5f6fa", width=2)),
     )
     fig_donut.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
@@ -403,7 +393,7 @@ with col_a:
         annotations=[dict(
             text=f"<b>{latest['total_output_MW']:,.0f}</b><br><span style='font-size:11px'>MW now</span>",
             x=0.5, y=0.5,
-            font=dict(family="DM Sans, sans-serif", size=20, color="#e8eaf0"),
+            font=dict(family="DM Sans, sans-serif", size=20, color="#1a1d2e"),
             showarrow=False,
         )],
     )
@@ -417,10 +407,14 @@ with col_b:
     fig_bar = px.bar(
         avg_output, x="Avg MW", y="Source", orientation="h",
         color="Avg MW",
-        color_continuous_scale=["#1e2740", "#3b82f6", "#60a5fa"],
+        color_continuous_scale=["#dde1f0", "#93c5fd", "#2563eb"],
     )
     fig_bar.update_coloraxes(showscale=False)
-    apply_layout(fig_bar, xaxis_title="Average MW", yaxis_title="")
+    apply_layout(fig_bar,
+        yaxis_title="",
+        xaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10, color="#000000"), title=dict(text="Average MW", font=dict(color="#000000"))),
+        yaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10, color="#000000")),
+    )
     st.plotly_chart(fig_bar, use_container_width=True)
 
 st.divider()
@@ -432,8 +426,17 @@ section("Generation", "Mix Over Time")
 fig_area = px.area(df, x="time", y=GENERATION_COLS, color_discrete_sequence=PALETTE)
 fig_area.update_traces(line=dict(width=0.8))
 apply_layout(fig_area,
+    xaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10, color="#000000")),
     yaxis_title="MW",
-    legend=dict(**PLOT_LAYOUT["legend"], orientation="h", y=-0.22),
+    yaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10, color="#000000")),
+    legend=dict(
+        bgcolor="rgba(255,255,255,0.9)",
+        bordercolor="#dde1f0",
+        borderwidth=1,
+        font=dict(size=10, family="DM Sans, sans-serif", color="#000000"),
+        orientation="h",
+        y=-0.18
+    ),
 )
 st.plotly_chart(fig_area, use_container_width=True)
 
@@ -457,18 +460,26 @@ for group, group_cols in GROUPS.items():
 fig_mix.add_trace(go.Scatter(
     x=df["time"], y=df["carbon_intensity"],
     name="Carbon Intensity (gCO₂/kWh)", yaxis="y2",
-    line=dict(color="#fbbf24", width=2, dash="dot"),
+    line=dict(color="#1a1d2e", width=4, dash="dot"),
     hovertemplate="<b>Carbon Intensity</b>: %{y:.0f} gCO₂/kWh<extra></extra>",
 ))
 apply_layout(fig_mix,
-    yaxis=dict(**PLOT_LAYOUT["yaxis"], title="MW"),
+    xaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10, color="#000000")),
+    yaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, title="MW", tickfont=dict(size=10, color="#000000")),
     yaxis2=dict(
-        title=dict(text="gCO₂/kWh", font=dict(color="#fbbf24")),
+        title=dict(text="gCO₂/kWh", font=dict(color="#000000")),
         overlaying="y", side="right",
         gridcolor="rgba(0,0,0,0)", zeroline=False,
-        tickfont=dict(size=10, color="#fbbf24"),
+        tickfont=dict(size=10, color="#000000"),
     ),
-    legend=dict(**PLOT_LAYOUT["legend"], orientation="h", y=-0.18),
+    legend=dict(
+        bgcolor="rgba(255,255,255,0.9)",
+        bordercolor="#dde1f0",
+        borderwidth=1,
+        font=dict(size=10, family="DM Sans, sans-serif", color="#000000"),
+        orientation="h",
+        y=-0.18
+    ),
 )
 st.plotly_chart(fig_mix, use_container_width=True)
 
@@ -499,14 +510,15 @@ with col_c:
     ))
     apply_layout(fig_profile,
         xaxis=dict(
-            **PLOT_LAYOUT["xaxis"],
-            title="Hour of Day",
+            gridcolor="#eef0f8", zeroline=False, showline=False,
+            title=dict(text="Hour of Day", font=dict(color="#000000")),
             tickmode="linear",
             tick0=0, dtick=1,
             tickvals=list(range(24)),
             ticktext=[f"{h:02d}:00" for h in range(24)],
+            tickfont=dict(size=10, color="#000000"),
         ),
-        yaxis=dict(**PLOT_LAYOUT["yaxis"], title="Average MW"),
+        yaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, title=dict(text="Average MW", font=dict(color="#000000")), tickfont=dict(size=10, color="#000000")),
         showlegend=False,
     )
     st.plotly_chart(fig_profile, use_container_width=True)
@@ -525,10 +537,21 @@ with col_d:
     fig_co2 = px.bar(
         co2_df, x="Avg gCO₂ contribution", y="Source", orientation="h",
         color="Avg gCO₂ contribution",
-        color_continuous_scale=["#10b981", "#f59e0b", "#ef4444"],
+        color_continuous_scale=["#059669", "#d97706", "#dc2626"],
     )
     fig_co2.update_coloraxes(showscale=False)
-    apply_layout(fig_co2, xaxis_title="Avg gCO₂/kWh contribution", yaxis_title="")
+    apply_layout(fig_co2,
+        xaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10, color="#000000"), title=dict(text="Total gCO₂ contribution", font=dict(color="#000000"))),
+        yaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10, color="#000000"), title=dict(text="Source", font=dict(color="#000000"))),
+        legend=dict(
+            bgcolor="rgba(255,255,255,0.9)",
+            bordercolor="#dde1f0",
+            borderwidth=1,
+            font=dict(size=10, family="DM Sans, sans-serif", color="#000000"),
+            orientation="h",
+            y=-0.18
+        ),
+    )
     st.plotly_chart(fig_co2, use_container_width=True)
 
 
@@ -542,36 +565,42 @@ section("Solar", "Solar Energy Patterns")
 col_s1, col_s2 = st.columns(2)
 
 with col_s1:
-    # Solar output vs shortwave radiation — dual axis line
     section("", "Output vs Shortwave Radiation")
     fig_solar_rad = go.Figure()
     fig_solar_rad.add_trace(go.Scatter(
         x=df["time"], y=df["Solar"],
         name="Solar (MW)", yaxis="y1",
-        fill="tozeroy", fillcolor="rgba(251,191,36,0.07)",
-        line=dict(color="#fbbf24", width=2),
+        fill="tozeroy", fillcolor="rgba(217,119,6,0.07)",
+        line=dict(color="#d97706", width=2),
         hovertemplate="<b>Solar</b>: %{y:,.0f} MW<extra></extra>",
     ))
     fig_solar_rad.add_trace(go.Scatter(
         x=df["time"], y=df["shortwave_radiation"],
         name="Shortwave Radiation (W/m²)", yaxis="y2",
-        line=dict(color="#fb923c", width=1.5, dash="dot"),
+        line=dict(color="#ea580c", width=1.5, dash="dot"),
         hovertemplate="<b>Radiation</b>: %{y:,.0f} W/m²<extra></extra>",
     ))
     apply_layout(fig_solar_rad,
-        yaxis=dict(**PLOT_LAYOUT["yaxis"], title="MW"),
+        xaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, tickfont=dict(size=10, color="#000000")),
+        yaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, title=dict(text="MW", font=dict(color="#000000")), tickfont=dict(size=10, color="#000000")),
         yaxis2=dict(
-            title=dict(text="W/m²", font=dict(color="#fb923c")),
+            title=dict(text="W/m²", font=dict(color="#000000")),
             overlaying="y", side="right",
             gridcolor="rgba(0,0,0,0)", zeroline=False,
-            tickfont=dict(size=10, color="#fb923c"),
+            tickfont=dict(size=10, color="#ea580c"),
         ),
-        legend=dict(**PLOT_LAYOUT["legend"], orientation="h", y=-0.2),
+        legend=dict(
+            bgcolor="rgba(255,255,255,0.9)",
+            bordercolor="#dde1f0",
+            borderwidth=1,
+            font=dict(size=10, family="DM Sans, sans-serif", color="#000000"),
+            orientation="h",
+            y=-0.2
+        ),
     )
     st.plotly_chart(fig_solar_rad, use_container_width=True)
 
 with col_s2:
-    # Solar average daily profile
     section("", "Average Solar Output by Hour of Day")
     solar_hourly = (
         df.assign(hour=df["time"].dt.hour)
@@ -584,20 +613,21 @@ with col_s2:
         x=solar_hourly["hour"], y=solar_hourly["Solar"],
         mode="lines",
         fill="tozeroy",
-        fillcolor="rgba(251,191,36,0.07)",
-        line=dict(color="#fbbf24", width=2),
+        fillcolor="rgba(217,119,6,0.07)",
+        line=dict(color="#d97706", width=2),
         hovertemplate="<b>%{x:02d}:00</b> — %{y:,.0f} MW<extra></extra>",
     ))
     apply_layout(fig_solar_profile,
         xaxis=dict(
-            **PLOT_LAYOUT["xaxis"],
-            title="Hour of Day",
+            gridcolor="#eef0f8", zeroline=False, showline=False,
+            title=dict(text="Hour of Day", font=dict(color="#000000")),
             tickmode="linear",
             tick0=0, dtick=1,
             tickvals=list(range(24)),
             ticktext=[f"{h:02d}:00" for h in range(24)],
+            tickfont=dict(size=10, color="#000000"),
         ),
-        yaxis=dict(**PLOT_LAYOUT["yaxis"], title="Average MW"),
+        yaxis=dict(gridcolor="#eef0f8", zeroline=False, showline=False, title=dict(text="Average MW", font=dict(color="#000000")), tickfont=dict(size=10, color="#000000")),
         showlegend=False,
     )
     st.plotly_chart(fig_solar_profile, use_container_width=True)
