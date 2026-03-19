@@ -264,6 +264,7 @@ def fetch_lstm_forecast(days: int) -> pd.DataFrame:
     response.raise_for_status()
     return pd.DataFrame(response.json())
 
+# carbon intensity
 def fetch_xgb_forecast() -> pd.DataFrame:
     print("running xgb model on api endpoint")
     response_xgb = requests.get(
@@ -275,7 +276,6 @@ def fetch_xgb_forecast() -> pd.DataFrame:
     # # rename columns to match LSTM shape
     # xgb_df = xgb_df.rename(columns={})
     return xgb_df
-
 
 if predict_clicked:
     with st.spinner("Fetching forecast..."):
@@ -290,6 +290,8 @@ if predict_clicked:
             #     for src, factor in CARBON_INTENSITY_FACTORS.items()
             #     if src in df.columns
             # )
+
+
             # df["carbon_intensity"] = emissions / df["total_output_MW"]
             # # Pre-compute grouped columns
             # for group, sources in GROUPS.items():
