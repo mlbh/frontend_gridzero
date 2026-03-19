@@ -245,7 +245,7 @@ with ctrl_a:
         "Forecast horizon",
         options=list(range(1, 8)),
         format_func=lambda x: f"{x} day{'s' if x > 1 else ''}",
-        index=2,
+        index=6,
     )
 with ctrl_b:
     st.write(""); st.write("")
