@@ -256,7 +256,7 @@ with ctrl_c:
         st.info(f"Showing {st.session_state.forecast_days}-day forecast. Adjust the horizon and click Run Forecast to refresh.")
 
 # ── Fetch ──────────────────────────────────────────────────────────────────────
-def fetch_forecast(days: int) -> pd.DataFrame:
+def fetch_lstm_forecast(days: int) -> pd.DataFrame:
     response = requests.get(
         "https://gridzero-400241154738.europe-west2.run.app/predict_lstm",
         params={"days": days},
@@ -264,22 +264,44 @@ def fetch_forecast(days: int) -> pd.DataFrame:
     response.raise_for_status()
     return pd.DataFrame(response.json())
 
+# carbon intensity
+def fetch_xgb_forecast() -> pd.DataFrame:
+    print("running xgb model on api endpoint")
+    response_xgb = requests.get(
+        "https://gridzero-400241154738.europe-west2.run.app/predict_xgb",          # swap in your real URL when ready
+    )
+    response_xgb.raise_for_status()
+    xgb_df = pd.DataFrame(response_xgb.json())
+    # # rename columns to match LSTM shape
+    # xgb_df = xgb_df.rename(columns={})
+    return xgb_df
+
 if predict_clicked:
     with st.spinner("Fetching forecast..."):
         try:
-            df = fetch_forecast(days)
+            df = fetch_lstm_forecast(days)
             df["time"] = pd.to_datetime(df["time"])
-            df = df.sort_values("time")
-            emissions = sum(
-                df[src] * factor
-                for src, factor in CARBON_INTENSITY_FACTORS.items()
-                if src in df.columns
-            )
-            df["carbon_intensity"] = emissions / df["total_output_MW"]
-            # Pre-compute grouped columns
-            for group, sources in GROUPS.items():
-                cols = [c for c in sources if c in df.columns]
-                df[group] = df[cols].sum(axis=1)
+
+            # df = df.sort_values("time")
+            # emissions = sum(
+            #     df[src] * factor
+            #     for src, factor in CARBON_INTENSITY_FACTORS.items()
+            #     if src in df.columns
+            # )
+
+
+            # df["carbon_intensity"] = emissions / df["total_output_MW"]
+            # # Pre-compute grouped columns
+            # for group, sources in GROUPS.items():
+            #     cols = [c for c in sources if c in df.columns]
+            #     df[group] = df[cols].sum(axis=1)
+
+            #if XGB live
+            
+            carbon_df = fetch_xgb_forecast()
+            df["carbon_intensity"] = carbon_df['carbon_intensity']
+
+
             st.session_state.forecast_df   = df
             st.session_state.forecast_days = days
             st.success("Forecast loaded successfully.")
