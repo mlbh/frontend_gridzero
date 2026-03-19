@@ -16,7 +16,6 @@ if "forecast_df" not in st.session_state:
     st.session_state.forecast_df = None
 if "forecast_days" not in st.session_state:
     st.session_state.forecast_days = None
-# added for xgb
 if "xgb_df" not in st.session_state:
     st.session_state.xgb_df = None
 
@@ -32,7 +31,7 @@ with col_select:
     )
 
 with col_button:
-    st.write("")  # vertical alignment nudge
+    st.write("")
     st.write("")
     predict_clicked = st.button("🔮 Predict", type="primary", use_container_width=True)
 
@@ -41,60 +40,19 @@ with col_info:
         st.info(f"Showing forecast for **{st.session_state.forecast_days} day(s)**. "
                 "Change the horizon and click Predict to refresh.")
 
-# ── Fetch only on button click ─────────────────────────────────────────────────
-# fetching from lstm
-def fetch_forecast(days: int) -> pd.DataFrame:
-    response = requests.get(
-        "https://gridzero-400241154738.europe-west2.run.app/predict_lstm",
-        params={"days": days}
-    )
-    response.raise_for_status()
-    return pd.DataFrame(response.json())
-
-# fetching from xgboost
-def fetch_xgb_forecast(days: int):
-    response_xgb = requests.get(
-        "XXXXX-URL-XXXXX",
-        params={"days": days}
-    )
-    response.raise_for_status()
-    return pd.Dataframe(response_xgb.json())
-
-if predict_clicked:
-    with st.spinner(f"Fetching {days}-day forecast..."):
-        try:
-            df = fetch_forecast(days)
-            st.session_state.forecast_df = df        # store in session state
-            st.session_state.forecast_days = days    # remember which days were fetched
-
-            xgb_df = fetch_xgb_forecast(days)
-            st.session_state.xgb_df = xgb_df  # store it
-
-            st.success("Forecast loaded!")
-        except Exception as e:
-            st.error(f"Failed to load data: {e}")
-
-# ── Only render charts if data exists in session state ─────────────────────────
-if st.session_state.forecast_df is None:
-    st.info("👆 Select a forecast horizon and click **Predict** to load data.")
-    st.stop()
-
-df = st.session_state.forecast_df  # use stored data for everything below
-
-
-# ── Carbon intensity calculation ───────────────────────────────────────────────
+# ── Carbon intensity calculation (used by both models) ─────────────────────────
 CARBON_INTENSITY = {
     "Biomass":                              230,
     "Fossil Gas":                           490,
     "Fossil Hard coal":                     820,
-    "Fossil Oil":                           650,  # added — commonly ~650
+    "Fossil Oil":                           650,
     "Nuclear":                               12,
     "Solar":                                 45,
     "Wind Onshore":                          11,
     "Wind Offshore":                         11,
     "Hydro Run-of-river and poundage":       24,
-    "Hydro Pumped Storage":                  24,  # similar to run-of-river
-    "Other":                                300,  # conservative catch-all
+    "Hydro Pumped Storage":                  24,
+    "Other":                                300,
 }
 
 def calculate_carbon_intensity(df: pd.DataFrame) -> pd.DataFrame:
@@ -106,10 +64,58 @@ def calculate_carbon_intensity(df: pd.DataFrame) -> pd.DataFrame:
     df["carbon_intensity"] = emissions / df["total_output_MW"]  # gCO₂/kWh
     return df
 
-df = calculate_carbon_intensity(df)
+# ── Fetch functions ────────────────────────────────────────────────────────────
+def fetch_forecast(days: int) -> pd.DataFrame:
+    response = requests.get(
+        "https://gridzero-400241154738.europe-west2.run.app/predict_lstm",
+        params={"days": days}
+    )
+    response.raise_for_status()
+    return pd.DataFrame(response.json())
 
+# needs to be ammendded
+def fetch_xgb_forecast(days: int) -> pd.DataFrame:
+    response_xgb = requests.get(
+        "https://gridzero-400241154738.europe-west2.run.app/predict_xgb",          # swap in your real URL when ready
+    )
+    response_xgb.raise_for_status()
+    xgb_df = pd.DataFrame(response_xgb.json())
+    # rename columns to match LSTM shape
+    xgb_df = xgb_df.rename(columns={
+        "time":  "time",
+        "Tot": "total_output_MW",
+    })
+
+    return xgb_df
+
+# ── Fetch on button click ──────────────────────────────────────────────────────
+if predict_clicked:
+    with st.spinner(f"Fetching {days}-day forecast..."):
+        # LSTM — required, show error if it fails
+        try:
+            df = fetch_forecast(days)
+            st.session_state.forecast_df = df
+            st.session_state.forecast_days = days
+            st.success("Forecast loaded!")
+        except Exception as e:
+            st.error(f"Failed to load LSTM data: {e}")
+
+        # XGBoost — optional, fail silently
+        try:
+            xgb_df = fetch_xgb_forecast(days)
+            st.session_state.xgb_df = xgb_df
+        except Exception:
+            st.session_state.xgb_df = None
+
+# ── Only render charts if LSTM data exists ─────────────────────────────────────
+if st.session_state.forecast_df is None:
+    st.info("👆 Select a forecast horizon and click **Predict** to load data.")
+    st.stop()
+
+df = st.session_state.forecast_df
 
 # ── Pre-process ────────────────────────────────────────────────────────────────
+df = calculate_carbon_intensity(df)
 df["time"] = pd.to_datetime(df["time"])
 df = df.sort_values("time")
 
@@ -124,15 +130,12 @@ RENEWABLES = ["Solar", "Wind Offshore", "Wind Onshore",
 FOSSIL     = ["Fossil Gas", "Fossil Hard coal", "Fossil Oil"]
 
 # ── KPI row ────────────────────────────────────────────────────────────────────
-# ── KPI row ────────────────────────────────────────────────────────────────────
-latest = df.iloc[-1]  # still used for carbon intensity, temperature, etc.
-
-total_output_all = df["total_output_MW"].sum()  # sum across all timestamps
+latest = df.iloc[-1]
+total  = latest[GENERATION_COLS].sum()
 renew  = latest[RENEWABLES].sum()
 fossil = latest[FOSSIL].sum()
 ci     = latest["carbon_intensity"]
 
-# colour-coded delta label
 if ci < 100:
     ci_label, ci_delta = "🟢 Very low", "Very low carbon"
 elif ci < 200:
@@ -143,15 +146,39 @@ else:
     ci_label, ci_delta = "🔴 High", "High carbon"
 
 k1, k2, k3, k4, k5 = st.columns(5)
-k1.metric("Total Output (MW)", f"{total_output_all:,.0f}")
-k2.metric("Carbon Intensity (gCO₂/kWh)",       f"{ci:.0f}", ci_label)
-k3.metric("Renewables (MW)",        f"{renew:,.0f}",  f"{renew/total_output_all*100:.1f}%")
-k4.metric("Fossil Fuels (MW)",      f"{fossil:,.0f}", f"{fossil/total_output_all*100:.1f}%")
-k5.metric("Temperature (°C)",       f"{latest['temperature_2m']:.1f}")
+k1.metric("Total Output (MW)",  f"{latest['total_output_MW']:,.0f}")
+k2.metric("Carbon Intensity",   f"{ci:.0f} gCO₂/kWh", ci_label)
+k3.metric("Renewables (MW)",    f"{renew:,.0f}",  f"{renew/total*100:.1f}%")
+k4.metric("Fossil Fuels (MW)",  f"{fossil:,.0f}", f"{fossil/total*100:.1f}%")
+k5.metric("Temperature (°C)",   f"{latest['temperature_2m']:.1f}")
 
+# ── Carbon Intensity Over Time ─────────────────────────────────────────────────
+st.subheader("Carbon Intensity Over Time")
+fig_ci = go.Figure()
 
+# Calculated from LSTM mix — always shows
+fig_ci.add_trace(go.Scatter(
+    x=df["time"], y=df["carbon_intensity"],
+    name="Calculated (from mix)", line=dict(color="#636EFA", width=2)
+))
 
-# ── Charts (unchanged from before) ────────────────────────────────────────────
+# XGBoost — only shows if fetch worked
+if st.session_state.xgb_df is not None:
+    xgb_df = st.session_state.xgb_df
+    xgb_df["time"] = pd.to_datetime(xgb_df["time"])
+    fig_ci.add_trace(go.Scatter(
+        x=xgb_df["time"], y=xgb_df["carbon_intensity"],
+        name="XGBoost (predicted)", line=dict(color="#EF553B", width=2, dash="dot")
+    ))
+
+fig_ci.update_layout(
+    yaxis=dict(title="gCO₂/kWh"),
+    hovermode="x unified",
+    legend=dict(orientation="h"),
+)
+st.plotly_chart(fig_ci, use_container_width=True)
+
+# ── Generation Mix Over Time ───────────────────────────────────────────────────
 st.subheader("Generation Mix Over Time")
 fig_area = px.area(
     df, x="time", y=GENERATION_COLS,
@@ -246,6 +273,3 @@ with st.expander("View raw data"):
         file_name=f"forecast_{st.session_state.forecast_days}d.csv",
         mime="text/csv",
     )
-
-st.subheader("Carbon Intensity Over Time")
-fig

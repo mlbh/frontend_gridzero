@@ -264,6 +264,7 @@ def fetch_lstm_forecast(days: int) -> pd.DataFrame:
     response.raise_for_status()
     return pd.DataFrame(response.json())
 
+# carbon intensity
 def fetch_xgb_forecast() -> pd.DataFrame:
     print("running xgb model on api endpoint")
     response_xgb = requests.get(
@@ -274,13 +275,26 @@ def fetch_xgb_forecast() -> pd.DataFrame:
     print(xgb_df.head())
     return xgb_df
 
-
 if predict_clicked:
     with st.spinner("Fetching forecast..."):
         try:
             df = fetch_lstm_forecast(days)
             df["time"] = pd.to_datetime(df["time"])
             df = df.sort_values("time")
+
+            #manually calculate carbon
+            # emissions = sum(
+            #     df[src] * factor
+            #     for src, factor in CARBON_INTENSITY_FACTORS.items()
+            #     if src in df.columns
+            # )
+
+
+            # df["carbon_intensity"] = emissions / df["total_output_MW"]
+            # # Pre-compute grouped columns
+            # for group, sources in GROUPS.items():
+            #     cols = [c for c in sources if c in df.columns]
+            #     df[group] = df[cols].sum(axis=1)
 
             carbon_df = fetch_xgb_forecast()
             df["carbon_intensity"] = carbon_df['carbon intensity']
